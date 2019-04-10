@@ -1,0 +1,110 @@
+pipeline {
+    agent any
+    
+    environment {
+        execDir = '/usr/local/bin'
+        desktopDir = '/Users/mariefraulienpamelasergio/Desktop/Test'
+        dockerImage = 'v4tech/imagemagick'
+        outputFolder = 'ResizedConverted'
+    }
+
+    stages {
+        stage ('File Permission Stage') {
+            environment {
+                    execMod = '/bin/chmod'
+            }
+            steps {
+                echo "Change file permission of cloned files from repo"
+                echo "Workspace directory: /Users/Shared/Jenkins/Home/workspace/${JOB_NAME}"
+                sh "cd ${workspace}"
+                sh "ls"
+                sh "sudo /bin/chmod -R 777 ."
+                sh "ls -l"
+            }
+        }
+
+        stage ('Change Branches'){
+            environment {
+                userEmail = 'mariefraulein.sergi@hcl.com'
+                userName = 'Pamela Sergio'
+                gitRepo = 'https://PamSergio:phGIL2hundred5.@github.com/PamSergio/Test.git'
+                gitComment = 'New batch of resized and converted images'
+                gitBranch = 'OutputBranch'
+            }
+            steps {
+                echo 'Configure GIT'
+                //sh "${execDir}/git config --global user.email ${userEmail}" 
+                //sh "${execDir}/git config --global user.name ${userName}"
+                //sh "${execDir}/git init"
+                //sh "${execDir}/git checkout ${gitBranch}"
+                //sh "${execDir}/git remote rm origin"
+                //sh "${execDir}/git remote add origin ${gitRepo}"
+               // sh "${execDir}/git status"
+                //sh "${execDir}/git fetch"
+                //sh "${execDir}/git checkout ${gitBranch}"
+            }
+        }
+
+        stage ('Image Resize Stage') {
+            environment {
+                resizeCon = 'ResizeContainer'
+            }
+            steps {
+                echo 'Resize PNG image/s from the workspace'
+                sh "sudo ${execDir}/docker run --name ${resizeCon} -v ${workspace}:/images ${dockerImage} mogrify -resize 50%/! -path /images/${outputFolder} /images/*.png"
+                sh "sudo ${execDir}/docker rm ${resizeCon}"
+            }
+        }
+
+        stage ('Image Conversion Stage') {
+            environment {
+                convertCon = 'ConvertContainer'
+            }
+            steps {
+                echo 'Convert the resized images from PNG to SVG'
+                sh "sudo ${execDir}/docker run --name ${convertCon} -v ${workspace}/${outputFolder}:/images ${dockerImage} mogrify -format svg -path /images /images/*.png"  
+                echo 'Copy files from workspace output folder to Desktop'
+                sh "sudo ${execDir}/docker cp ${convertCon}:/images ${desktopDir}"
+                echo 'Delete container for convert process'
+                sh "sudo ${execDir}/docker rm ${convertCon}"
+            }
+        }   
+
+        stage ('Commit files to GIT Repo'){
+            environment {
+                userEmail = 'mariefraulein.sergi@hcl.com'
+                userName = 'Pamela Sergio'
+                gitRepo1 = 'https://PamSergio:phGIL2hundred5.@github.com/PamSergio/Test.git'
+                gitRepo = 'https://PamSergio:phGIL2hundred5.@github.com/PamSergio/Out.git'
+                gitComment = 'New batch of resized and converted images'
+                gitBranch = 'OutputBranch'
+            }
+            steps {
+                echo 'Configure GIT'
+                //sh "${execDir}/git config --global user.email ${userEmail}" 
+                //sh "${execDir}/git config --global user.name ${userName}"
+                sh "sudo rm -rf ${workspace}/.git"
+                sh "${execDir}/git init"
+                //sh "${execDir}/git remote rm origin"
+                sh "${execDir}/git status"
+                sh "${execDir}/git remote add origin ${gitRepo}"
+                sh "${execDir}/git status"
+                //sh "${execDir}/git reset"
+                //sh "${execDir}/git status"
+                //sh "${execDir}/git checkout ${gitBranch}"
+                //echo 'Change branch from master to outputBranch'
+                //sh "${execDir}/git fetch"
+                //sh "${execDir}/git status"      
+                //sh "${execDir}/git checkout ${gitBranch}"
+                //echo 'Commit output files to GIT repository: https://github.com/PamSergio/Test.git'
+                echo 'Commit output files to GIT repository: https://github.com/PamSergio/Out.git'
+                //sh "${execDir}/git status"
+                sh "${execDir}/git add ."
+                sh "${execDir}/git commit -m '${gitComment}'"
+                sh "${execDir}/git status"
+                //sh "${execDir}/git push origin ${gitBranch} --force"
+                sh "${execDir}/git push -u origin master"
+            }
+        }   
+    }
+}   
