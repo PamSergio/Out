@@ -74,8 +74,8 @@ pipeline {
             environment {
                 userEmail = 'mariefraulein.sergi@hcl.com'
                 userName = 'Pamela Sergio'
-                gitRepo1 = 'https://PamSergio:phGIL2hundred5.@github.com/PamSergio/Test.git'
-                gitRepo = 'https://PamSergio:phGIL2hundred5.@github.com/PamSergio/Out.git'
+                gitRepo = 'https://PamSergio:phGIL2hundred5.@github.com/PamSergio/Test.git'
+                gitRepo1 = 'https://PamSergio:phGIL2hundred5.@github.com/PamSergio/Out.git'
                 gitComment = 'New batch of resized and converted images'
                 gitBranch = 'OutputBranch'
             }
@@ -100,6 +100,7 @@ pipeline {
                 echo 'Commit output files to GIT repository: https://github.com/PamSergio/Out.git'
                 //sh "${execDir}/git status"
                 sh "${execDir}/git add ."
+                sh "${execDir}/git status"
                 sh "${execDir}/git commit -m '${gitComment}'"
                 sh "${execDir}/git status"
                 //sh "${execDir}/git push origin ${gitBranch} --force"
